@@ -171,7 +171,8 @@
                 
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('app-view').style.display = 'block';
-                loadData();
+                // Wait slightly for DOM to settle
+                setTimeout(loadData, 500); 
             } else {
                 document.getElementById('login-screen').style.display = 'flex';
                 document.getElementById('app-view').style.display = 'none';
@@ -191,17 +192,26 @@
 
         window.logout = () => signOut(auth);
 
-        // INIT
+        // --- INIT with TIMEZONE FIX ---
         window.addEventListener('load', () => {
             const today = new Date();
             document.getElementById('entryDate').valueAsDate = today;
             document.getElementById('payDate').valueAsDate = today;
             
+            // Generate Month List (Local Time Safe)
             const sel = document.getElementById('monthSelector');
+            sel.innerHTML = ""; // Clear
+            
             for(let i=0; i<12; i++) {
                 const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+                
+                // Force Local Date formatting to match Input Field
+                const year = d.getFullYear();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const monthKey = `${year}-${month}`; // e.g., "2026-01"
+
                 const opt = document.createElement('option');
-                opt.value = d.toISOString().slice(0, 7);
+                opt.value = monthKey;
                 opt.text = d.toLocaleDateString('default', { month: 'long', year: 'numeric' });
                 sel.appendChild(opt);
             }
@@ -294,7 +304,7 @@
             }
         }
 
-        // --- UPDATED DEBUG SAVE FUNCTION ---
+        // --- SAVE FUNCTION ---
         window.saveEntry = async () => {
             const date = document.getElementById('entryDate').value;
             const qty = document.getElementById('entryQty').value;
