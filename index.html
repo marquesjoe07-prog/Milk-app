@@ -5,179 +5,299 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
     <title>Milk Ledger Pro</title>
     <style>
-        :root { --glass: rgba(255, 255, 255, 0.12); --glow: #00d2ff; --danger: #ff4d4d; }
+        :root { --glass: rgba(255, 255, 255, 0.12); --bg: #0f172a; --glow: #38bdf8; --danger: #ef4444; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
         body { 
-            margin: 0; font-family: 'Segoe UI', sans-serif; color: white;
-            background: #001219; background-image: url('https://images.unsplash.com/photo-1518173946687-a4c8a9ba332f?auto=format&fit=crop&w=1000&q=80');
-            background-size: cover; background-position: center; background-attachment: fixed; min-height: 100vh;
+            margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            color: white; background: var(--bg); 
+            background-image: linear-gradient(to bottom right, #0f172a, #1e293b);
+            min-height: 100vh;
         }
-        
-        /* Layout */
-        .drawer { position: fixed; left: -280px; top: 0; width: 280px; height: 100%; background: rgba(0,0,0,0.95); backdrop-filter: blur(25px); transition: 0.4s; z-index: 1000; }
-        .drawer.open { left: 0; }
-        .drawer a { display: block; padding: 20px; color: white; text-decoration: none; border-bottom: 1px solid #333; cursor: pointer; }
-        
-        .top-nav { padding: 20px; display: flex; align-items: center; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 900; }
-        .hamburger { font-size: 30px; cursor: pointer; margin-right: 20px; }
-        
-        .container { max-width: 500px; margin: auto; padding: 20px; animation: slideUp 0.5s ease; }
-        .card { background: var(--glass); backdrop-filter: blur(30px); border-radius: 24px; border: 1px solid rgba(255,255,255,0.15); padding: 25px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        
-        .total-glow { font-size: 48px; font-weight: 800; color: var(--glow); text-shadow: 0 0 25px rgba(0, 210, 255, 0.4); text-align: center; }
-        
-        input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.4); color: white; font-size: 16px; box-sizing: border-box; outline: none; }
-        button { width: 100%; padding: 18px; border-radius: 15px; border: none; background: var(--glow); font-weight: bold; color: #001219; font-size: 17px; cursor: pointer; transition: 0.2s; margin-top: 10px; }
-        button:active { transform: scale(0.98); opacity: 0.9; }
-        
-        /* List Styles */
-        .entry-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .delete-btn { background: none; border: none; color: var(--danger); font-size: 20px; width: auto; margin: 0; padding: 0 0 0 15px; }
 
-        @keyframes slideUp { from {opacity: 0; transform: translateY(20px);} to {opacity: 1; transform: translateY(0);} }
-        .hidden { display: none; }
+        /* --- 1. LOGIN SCREEN (Covers everything) --- */
+        #login-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #0f172a; z-index: 9999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            transition: opacity 0.3s ease;
+        }
+        .login-card {
+            background: rgba(255,255,255,0.05); padding: 30px; border-radius: 20px;
+            width: 90%; max-width: 320px; text-align: center;
+            border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+        }
+
+        /* --- 2. MAIN APP --- */
+        #app-view { display: none; /* Hidden by default */ }
+        
+        .app-header {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;
+        }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; padding-bottom: 80px; }
+
+        /* Cards */
+        .card {
+            background: var(--glass); border-radius: 20px; padding: 20px;
+            margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        /* Stats */
+        .big-price { font-size: 42px; font-weight: 800; text-align: center; color: var(--glow); text-shadow: 0 0 30px rgba(56, 189, 248, 0.3); margin: 10px 0; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+        .stat-box { background: rgba(0,0,0,0.2); padding: 10px; border-radius: 12px; text-align: center; }
+
+        /* Inputs */
+        input, select {
+            width: 100%; padding: 16px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(0,0,0,0.3); color: white; font-size: 16px; margin-bottom: 15px;
+            outline: none; min-width: 0;
+        }
+        input:focus { border-color: var(--glow); background: rgba(0,0,0,0.5); }
+
+        /* Quick Chips */
+        .chips { display: flex; gap: 8px; margin-bottom: 15px; }
+        .chip {
+            flex: 1; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 10px;
+            text-align: center; font-size: 14px; font-weight: 600; cursor: pointer;
+            border: 1px solid transparent; transition: 0.2s;
+        }
+        .chip.active { background: rgba(56, 189, 248, 0.2); border-color: var(--glow); color: var(--glow); }
+
+        /* Buttons */
+        .btn-main {
+            width: 100%; padding: 18px; border-radius: 14px; border: none;
+            background: var(--glow); color: #0f172a; font-size: 16px; font-weight: 700;
+            cursor: pointer;
+        }
+        .btn-del {
+            background: rgba(239, 68, 68, 0.15); color: var(--danger); border: none;
+            width: 35px; height: 35px; border-radius: 10px; cursor: pointer; font-size: 18px;
+        }
+
+        /* List */
+        .entry-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
     </style>
 </head>
 <body>
 
-    <div id="loginPage" class="hidden" style="height:100vh; display:flex; align-items:center; justify-content:center;">
-        <div class="card" style="width:300px; text-align:center;">
-            <h2>🔐 Secure Access</h2>
-            <input type="password" id="passInput" placeholder="Password">
-            <button onclick="checkLogin()">UNLOCK</button>
+    <div id="login-screen">
+        <div class="login-card">
+            <h2 style="margin-top:0;">🔐 Locked</h2>
+            <input type="password" id="password" placeholder="Enter Password" style="text-align:center;">
+            <button class="btn-main" onclick="attemptLogin()">UNLOCK</button>
         </div>
     </div>
 
-    <div id="appPage" class="hidden">
-        <div class="drawer" id="drawer">
-            <a onclick="showSection('home')">💧 Add Delivery</a>
-            <a onclick="showSection('history')">📅 History / Edit</a>
-            <a onclick="logout()" style="color:var(--danger)">🔒 Lock App</a>
-        </div>
-
-        <div class="top-nav">
-            <div class="hamburger" onclick="toggleDrawer()">☰</div>
-            <div style="font-weight:bold;">MILK LEDGER PRO</div>
+    <div id="app-view">
+        <div class="app-header">
+            <div style="font-weight:bold; font-size:18px;">🥛 Milk Ledger Pro</div>
+            <div onclick="lockApp()" style="font-size:20px; cursor:pointer;">🔒</div>
         </div>
 
         <div class="container">
-            <div id="homeSection">
-                <div class="card">
-                    <div class="total-glow" id="totalDisplay">₹0</div>
-                    <p style="text-align:center; opacity:0.6;">TOTAL DUE THIS MONTH</p>
-                </div>
-                <div class="card">
-                    <h3 style="margin-top:0;">Log Entry</h3>
-                    <input type="date" id="logDate">
-                    <input type="number" step="0.1" id="qty" placeholder="Liters (e.g. 1.0)" value="1.0">
-                    <input type="number" id="rate" placeholder="Rate (e.g. 60)" value="60">
-                    <button onclick="addEntry()">SAVE ENTRY</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <label style="margin:0; opacity:0.8;">Viewing Month:</label>
+                <select id="monthSelector" onchange="loadData()" style="width:160px; padding:10px; margin:0; background:rgba(0,0,0,0.5);">
+                    </select>
+            </div>
+
+            <div class="card">
+                <div style="text-align:center; opacity:0.6; font-size:13px; text-transform:uppercase;">Total Due</div>
+                <div class="big-price" id="totalCost">₹0</div>
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <span style="font-size:18px; font-weight:bold; display:block;" id="totalLiters">0 L</span>
+                        <span style="font-size:11px; opacity:0.6;">Total Volume</span>
+                    </div>
+                    <div class="stat-box">
+                        <span style="font-size:18px; font-weight:bold; display:block;" id="avgRate">₹0</span>
+                        <span style="font-size:11px; opacity:0.6;">Avg Rate</span>
+                    </div>
                 </div>
             </div>
 
-            <div id="historySection" class="hidden">
-                <div class="card">
-                    <h3>Monthly Records</h3>
-                    <div id="entriesList"></div>
+            <div class="card">
+                <h3 style="margin-top:0; margin-bottom:15px;">📝 Log Delivery</h3>
+                
+                <label>Date</label>
+                <input type="date" id="entryDate">
+
+                <label>Quantity</label>
+                <div class="chips">
+                    <div class="chip active" onclick="setQty(0.5, this)">0.5L</div>
+                    <div class="chip" onclick="setQty(1.0, this)">1.0L</div>
+                    <div class="chip" onclick="setQty(1.5, this)">1.5L</div>
+                    <div class="chip" onclick="setQty(2.0, this)">2.0L</div>
+                </div>
+                <input type="number" step="0.1" id="entryQty" value="0.5">
+
+                <label>Rate (₹)</label>
+                <input type="number" id="entryRate" value="60">
+
+                <button class="btn-main" id="saveBtn" onclick="saveEntry()">ADD ENTRY</button>
+            </div>
+
+            <h3 style="padding-left:10px; margin-bottom:10px;">History</h3>
+            <div class="card" style="padding:0 20px;">
+                <div id="historyList">
+                    <p style="text-align:center; padding:20px; opacity:0.5;">Loading...</p>
                 </div>
             </div>
         </div>
     </div>
 
     <script type="module">
-        // --- 1. PASTE YOUR FIREBASE CONFIG 
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, query, where, onSnapshot, deleteDoc, doc, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-      const firebaseConfig = {
-  apiKey: "AIzaSyBZsSTGkyS7zJxnckhCF17PYLs4mzDk1iY",
-  authDomain: "milk-app-d3d4b.firebaseapp.com",
-  projectId: "milk-app-d3d4b",
-  storageBucket: "milk-app-d3d4b.firebasestorage.app",
-  messagingSenderId: "18077804351",
-  appId: "1:18077804351:web:940c2c9ebb80dc5b33558a"
-};
+
+        // YOUR CONFIG IS HERE NOW:
+        const firebaseConfig = {
+            apiKey: "AIzaSyBZsSTGkyS7zJxnckhCF17PYLs4mzDk1iY",
+            authDomain: "milk-app-d3d4b.firebaseapp.com",
+            projectId: "milk-app-d3d4b",
+            storageBucket: "milk-app-d3d4b.firebasestorage.app",
+            messagingSenderId: "18077804351",
+            appId: "1:18077804351:web:940c2c9ebb80dc5b33558a"
+        };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const COLL = "milk_records";
+        const TABLE = "milk_logs_v3"; // New table for fresh start
 
-        // --- APP LOGIC ---
-        let currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
-
-        window.addEventListener('load', () => {
-            document.getElementById('logDate').valueAsDate = new Date();
-            if(localStorage.getItem('milk_auth') === 'true') showApp();
-            else document.getElementById('loginPage').classList.remove('hidden');
-        });
-
-        window.checkLogin = () => {
-            if(document.getElementById('passInput').value === 'admin') { // Simple Password
-                localStorage.setItem('milk_auth', 'true');
-                showApp();
-            } else alert('Wrong Password');
+        // --- AUTH LOGIC ---
+        window.attemptLogin = () => {
+            const pwd = document.getElementById('password').value;
+            if(pwd === 'admin') { // Password is "admin"
+                localStorage.setItem('milk_pro_logged', 'true');
+                unlockApp();
+            } else {
+                alert("Incorrect Password");
+            }
         }
 
-        window.logout = () => {
-            localStorage.removeItem('milk_auth');
+        window.unlockApp = () => {
+            // Hides Login, Shows App
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app-view').style.display = 'block';
+            loadData(); // Connect to database
+        }
+
+        window.lockApp = () => {
+            localStorage.removeItem('milk_pro_logged');
             location.reload();
         }
 
-        function showApp() {
-            document.getElementById('loginPage').classList.add('hidden');
-            document.getElementById('appPage').classList.remove('hidden');
-            loadData();
-        }
-
-        // Drawer & Navigation
-        window.toggleDrawer = () => document.getElementById('drawer').classList.toggle('open');
-        window.showSection = (id) => {
-            document.getElementById('homeSection').classList.add('hidden');
-            document.getElementById('historySection').classList.add('hidden');
-            document.getElementById(id + 'Section').classList.remove('hidden');
-            toggleDrawer();
-        }
-
-        // Firebase Functions
-        function loadData() {
-            const q = query(collection(db, COLL), orderBy("date", "desc"));
+        // --- APP LOGIC ---
+        window.addEventListener('load', () => {
+            // Setup Defaults
+            document.getElementById('entryDate').valueAsDate = new Date();
             
-            onSnapshot(q, (snapshot) => {
-                let total = 0;
+            // Build Month Selector
+            const sel = document.getElementById('monthSelector');
+            const now = new Date();
+            for(let i=0; i<12; i++) {
+                const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                const opt = document.createElement('option');
+                opt.value = d.toISOString().slice(0, 7);
+                opt.text = d.toLocaleDateString('default', { month: 'long', year: 'numeric' });
+                sel.appendChild(opt);
+            }
+
+            // Check if already logged in
+            if(localStorage.getItem('milk_pro_logged') === 'true') {
+                unlockApp();
+            }
+        });
+
+        window.setQty = (val, el) => {
+            document.getElementById('entryQty').value = val;
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        // --- DATABASE ---
+        let unsubscribe = null;
+
+        window.loadData = () => {
+            const selectedMonth = document.getElementById('monthSelector').value;
+            if(unsubscribe) unsubscribe();
+
+            const q = query(
+                collection(db, TABLE), 
+                where("month", "==", selectedMonth),
+                orderBy("date", "desc")
+            );
+
+            unsubscribe = onSnapshot(q, (snapshot) => {
                 let html = "";
-                
+                let totalCost = 0;
+                let totalLiters = 0;
+
                 snapshot.forEach((doc) => {
                     const d = doc.data();
-                    // Only calculate for current month
-                    if(d.date.startsWith(currentMonth)) {
-                        total += (d.qty * d.rate);
-                    }
-                    
+                    const cost = d.qty * d.rate;
+                    totalCost += cost;
+                    totalLiters += parseFloat(d.qty);
+
+                    const dateObj = new Date(d.date);
+                    const dayStr = dateObj.toLocaleDateString('default', { day: 'numeric', weekday: 'short' });
+
                     html += `
-                        <div class="entry-item">
-                            <div><b>${d.date}</b><br><small>${d.qty}L @ ₹${d.rate}</small></div>
-                            <div style="display:flex; align-items:center;">
-                                <span style="font-weight:bold; color:var(--glow)">₹${Math.round(d.qty * d.rate)}</span>
-                                <button class="delete-btn" onclick="deleteEntry('${doc.id}')">🗑️</button>
+                        <div class="entry-row">
+                            <div>
+                                <div style="font-weight:600;">${dayStr}</div>
+                                <div style="font-size:12px; opacity:0.6;">${d.qty}L @ ₹${d.rate}</div>
+                            </div>
+                            <div style="display:flex; gap:15px; align-items:center;">
+                                <div style="font-weight:bold; color:#38bdf8;">₹${cost}</div>
+                                <button class="btn-del" onclick="deleteItem('${doc.id}')">✕</button>
                             </div>
                         </div>
                     `;
                 });
-                
-                document.getElementById('totalDisplay').innerText = "₹" + Math.round(total);
-                document.getElementById('entriesList').innerHTML = html || "<p>No records found.</p>";
+
+                document.getElementById('historyList').innerHTML = html || '<p style="text-align:center; opacity:0.4; padding:20px;">No records found.</p>';
+                document.getElementById('totalCost').innerText = '₹' + Math.round(totalCost);
+                document.getElementById('totalLiters').innerText = totalLiters.toFixed(1) + ' L';
+                const avg = totalLiters > 0 ? (totalCost / totalLiters).toFixed(1) : 0;
+                document.getElementById('avgRate').innerText = '₹' + avg;
             });
         }
 
-        window.addEntry = async () => {
-            const date = document.getElementById('logDate').value;
-            const qty = document.getElementById('qty').value;
-            const rate = document.getElementById('rate').value;
-            
-            await addDoc(collection(db, COLL), { date, qty, rate });
-            alert("Added!");
+        window.saveEntry = async () => {
+            const date = document.getElementById('entryDate').value;
+            const qty = parseFloat(document.getElementById('entryQty').value);
+            const rate = parseFloat(document.getElementById('entryRate').value);
+            const btn = document.getElementById('saveBtn');
+
+            if(!date || !qty) return alert("Check inputs");
+
+            btn.innerText = "Saving...";
+            try {
+                await addDoc(collection(db, TABLE), {
+                    date: date,
+                    month: date.slice(0, 7),
+                    qty: qty,
+                    rate: rate,
+                    created: new Date()
+                });
+                window.setQty(0.5, document.querySelector('.chip:first-child')); // Reset to 0.5L
+            } catch(e) {
+                alert("Error: " + e.message);
+            }
+            btn.innerText = "ADD ENTRY";
         }
 
-        window.deleteEntry = async (id) => {
-            if(confirm("Delete this?")) await deleteDoc(doc(db, COLL, id));
+        window.deleteItem = async (id) => {
+            if(confirm("Delete this?")) await deleteDoc(doc(db, TABLE, id));
         }
     </script>
 </body>
