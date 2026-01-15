@@ -153,10 +153,14 @@
         
         const MILK_TABLE = "milk_logs_v3";
         const PAY_TABLE = "payment_logs";
+        
+        // ----------------------------------------------------
+        // ⚠️ CRITICAL: THIS MUST MATCH YOUR LOGIN EMAIL ⚠️
         const OWNER_EMAIL = "admin@milk.com"; 
+        // ----------------------------------------------------
 
         let isOwner = false; 
-        let currentBalance = 0; // Track balance for Pay Full button
+        let currentBalance = 0; 
 
         // AUTH
         onAuthStateChanged(auth, (user) => {
@@ -217,7 +221,6 @@
             let billAmount = 0;
             let paidAmount = 0;
 
-            // 1. Load Payments
             if(unsubPay) unsubPay();
             unsubPay = onSnapshot(query(collection(db, PAY_TABLE), where("month", "==", selectedMonth)), (snap) => {
                 paidAmount = 0;
@@ -240,7 +243,6 @@
                 updateBalance(billAmount, paidAmount);
             });
 
-            // 2. Load Milk
             if(unsubMilk) unsubMilk();
             unsubMilk = onSnapshot(query(collection(db, MILK_TABLE), where("month", "==", selectedMonth)), (snap) => {
                 billAmount = 0;
@@ -279,11 +281,10 @@
             if(currentBalance <= 0 && bill > 0) {
                 el.innerText = "PAID ✅";
                 el.style.color = "var(--success)";
-                btn.style.display = "none"; // Hide button if paid
+                btn.style.display = "none";
             } else {
                 el.innerText = "₹" + currentBalance;
                 el.style.color = "var(--glow)";
-                // Show Pay Full button if there is a balance (and isOwner)
                 if(isOwner && currentBalance > 0) {
                     btn.style.display = "block";
                     document.getElementById('payFullAmt').innerText = currentBalance;
@@ -293,17 +294,38 @@
             }
         }
 
-        // ACTIONS
+        // --- UPDATED DEBUG SAVE FUNCTION ---
         window.saveEntry = async () => {
             const date = document.getElementById('entryDate').value;
             const qty = document.getElementById('entryQty').value;
             const rate = document.getElementById('entryRate').value;
-            if(!date || !qty) return alert("Check inputs");
-            
+            const btn = document.getElementById('saveBtn');
+
+            if(!date || !qty) return alert("Please check inputs");
+
+            // VISUAL FEEDBACK
+            const originalText = btn.innerText;
+            btn.innerText = "⏳ SAVING...";
+            btn.disabled = true;
+
             try {
-                await addDoc(collection(db, MILK_TABLE), { date, month: date.slice(0,7), qty: parseFloat(qty), rate: parseFloat(rate), created: new Date() });
+                await addDoc(collection(db, MILK_TABLE), { 
+                    date: date, 
+                    month: date.slice(0,7), 
+                    qty: parseFloat(qty), 
+                    rate: parseFloat(rate), 
+                    created: new Date() 
+                });
+                // SUCCESS
+                alert("✅ Saved!"); 
                 window.setQty(0.5, document.querySelector('.chip:first-child'));
-            } catch(e) { alert(e.message); }
+            } catch(e) {
+                // FAILURE ALERT
+                alert("❌ ERROR: " + e.message + "\n\n(Check your Database Rules in Firebase Console!)");
+            }
+            
+            btn.innerText = originalText;
+            btn.disabled = false;
         }
 
         window.addPayment = async () => {
@@ -316,7 +338,6 @@
             }
         }
 
-        // NEW: PAY FULL FUNCTION
         window.payFull = async () => {
             if(currentBalance <= 0) return;
             if(confirm(`Pay remaining balance of ₹${currentBalance}?`)) {
