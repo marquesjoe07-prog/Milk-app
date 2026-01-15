@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
     <title>Milk Ledger Pro</title>
     <style>
-        :root { --glass: rgba(255, 255, 255, 0.12); --bg: #0f172a; --glow: #38bdf8; --danger: #ef4444; }
+        :root { --glass: rgba(255, 255, 255, 0.12); --bg: #0f172a; --glow: #38bdf8; --danger: #ef4444; --success: #22c55e; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: white; background: var(--bg); background-image: linear-gradient(to bottom right, #0f172a, #1e293b); min-height: 100vh; }
 
@@ -19,31 +19,43 @@
         .container { max-width: 600px; margin: 0 auto; padding: 20px; padding-bottom: 80px; }
         .card { background: var(--glass); border-radius: 20px; padding: 20px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
         
-        /* UI Elements */
-        .big-price { font-size: 42px; font-weight: 800; text-align: center; color: var(--glow); text-shadow: 0 0 30px rgba(56, 189, 248, 0.3); margin: 10px 0; }
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
-        .stat-box { background: rgba(0,0,0,0.2); padding: 10px; border-radius: 12px; text-align: center; }
+        /* Typography */
+        .big-price { font-size: 36px; font-weight: 800; text-align: center; color: var(--glow); text-shadow: 0 0 30px rgba(56, 189, 248, 0.3); margin: 5px 0; }
+        
+        /* Inputs & Buttons */
         input, select { width: 100%; padding: 16px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.15); background: rgba(0,0,0,0.3); color: white; font-size: 16px; margin-bottom: 15px; outline: none; }
+        .btn-main { width: 100%; padding: 18px; border-radius: 14px; border: none; background: var(--glow); color: #0f172a; font-size: 16px; font-weight: 700; cursor: pointer; }
+        .btn-del { background: rgba(239, 68, 68, 0.15); color: var(--danger); border: none; width: 30px; height: 30px; border-radius: 8px; cursor: pointer; font-size: 14px; display:flex; align-items:center; justify-content:center;}
         .chips { display: flex; gap: 8px; margin-bottom: 15px; }
         .chip { flex: 1; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 10px; text-align: center; font-size: 14px; font-weight: 600; cursor: pointer; border: 1px solid transparent; }
         .chip.active { background: rgba(56, 189, 248, 0.2); border-color: var(--glow); color: var(--glow); }
-        .btn-main { width: 100%; padding: 18px; border-radius: 14px; border: none; background: var(--glow); color: #0f172a; font-size: 16px; font-weight: 700; cursor: pointer; }
-        .btn-del { background: rgba(239, 68, 68, 0.15); color: var(--danger); border: none; width: 35px; height: 35px; border-radius: 10px; cursor: pointer; font-size: 18px; }
-        .entry-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        
-        /* Special Classes */
-        .owner-only { display: none; } /* Hidden by default */
+
+        /* Balance & Stats */
+        .balance-row { display: flex; justify-content: space-between; margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .bal-item { text-align: center; flex: 1; }
+        .bal-val { font-weight: bold; font-size: 18px; display: block; }
+        .bal-lbl { font-size: 11px; opacity: 0.6; text-transform: uppercase; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+        .stat-box { background: rgba(0,0,0,0.2); padding: 10px; border-radius: 12px; text-align: center; }
+
+        /* Lists */
+        .entry-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .pay-row { background: rgba(34, 197, 94, 0.1); border-left: 3px solid var(--success); padding: 10px; margin-bottom: 8px; border-radius: 4px; display:flex; justify-content:space-between; align-items:center; }
+
+        /* Utilities */
+        .owner-only { display: none; }
         #loginError { color: var(--danger); font-size: 14px; margin-bottom: 10px; display: none; }
         .user-badge { font-size: 12px; opacity: 0.7; margin-top: 5px; color: var(--glow); }
+        .text-green { color: var(--success); }
     </style>
 </head>
 <body>
 
     <div id="login-screen">
         <div class="login-card">
-            <h2 style="margin-top:0;">🔐 Login</h2>
+            <h2 style="margin-top:0;">🔐 Ledger Login</h2>
             <div id="loginError"></div>
-            <input type="email" id="email" placeholder="Email (admin or milkman)" style="text-align:center;">
+            <input type="email" id="email" placeholder="Email" style="text-align:center;">
             <input type="password" id="password" placeholder="Password" style="text-align:center;">
             <button class="btn-main" onclick="secureLogin()">ENTER</button>
         </div>
@@ -65,16 +77,42 @@
             </div>
 
             <div class="card">
-                <div style="text-align:center; opacity:0.6; font-size:13px; text-transform:uppercase;">Total Amount Due</div>
-                <div class="big-price" id="totalCost">₹0</div>
+                <div style="text-align:center; opacity:0.6; font-size:12px; text-transform:uppercase;">Balance Due</div>
+                <div class="big-price" id="balanceDisplay">₹0</div>
+                
+                <div class="balance-row">
+                    <div class="bal-item"><span class="bal-val" id="totalBill">₹0</span><span class="bal-lbl">Total Bill</span></div>
+                    <div class="bal-item"><span class="bal-val text-green" id="totalPaid">₹0</span><span class="bal-lbl">Paid</span></div>
+                </div>
+
                 <div class="stats-grid">
-                    <div class="stat-box"><span style="font-size:18px; font-weight:bold; display:block;" id="totalLiters">0 L</span><span style="font-size:11px; opacity:0.6;">Volume</span></div>
-                    <div class="stat-box"><span style="font-size:18px; font-weight:bold; display:block;" id="avgRate">₹0</span><span style="font-size:11px; opacity:0.6;">Avg Rate</span></div>
+                    <div class="stat-box"><span style="font-weight:bold; display:block;" id="totalLiters">0 L</span><span style="font-size:11px; opacity:0.6;">Total Milk</span></div>
+                    <div class="stat-box"><span style="font-weight:bold; display:block;" id="avgRate">₹0</span><span style="font-size:11px; opacity:0.6;">Avg Rate</span></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-top:0; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px;">💰 Payments</h3>
+                
+                <div id="paymentList"></div>
+
+                <div class="owner-only" style="margin-top:20px; border-top:1px solid rgba(255,255,255,0.1); padding-top:15px;">
+                    
+                    <button id="payFullBtn" class="btn-main" onclick="payFull()" style="background:#fff; color:#000; margin-bottom:15px; display:none;">
+                        PAY REMAINING (₹<span id="payFullAmt">0</span>)
+                    </button>
+
+                    <label style="font-size:12px; color:var(--success);">Or Add Custom Payment</label>
+                    <div style="display:flex; gap:10px;">
+                        <input type="date" id="payDate" style="margin-bottom:0;">
+                        <input type="number" id="payAmount" placeholder="₹ Amount" style="margin-bottom:0;">
+                    </div>
+                    <button class="btn-main" onclick="addPayment()" style="margin-top:10px; background:var(--success); color:white;">ADD PAYMENT</button>
                 </div>
             </div>
 
             <div class="card owner-only">
-                <h3 style="margin-top:0; margin-bottom:15px;">📝 Add Milk Entry</h3>
+                <h3 style="margin-top:0; margin-bottom:15px;">📝 Add Milk</h3>
                 <input type="date" id="entryDate">
                 <div class="chips">
                     <div class="chip active" onclick="setQty(0.5, this)">0.5L</div>
@@ -84,10 +122,10 @@
                 </div>
                 <input type="number" step="0.1" id="entryQty" value="0.5">
                 <input type="number" id="entryRate" value="60">
-                <button class="btn-main" id="saveBtn" onclick="saveEntry()">SAVE</button>
+                <button class="btn-main" id="saveBtn" onclick="saveEntry()">SAVE ENTRY</button>
             </div>
 
-            <h3 style="padding-left:10px; margin-bottom:10px;">History</h3>
+            <h3 style="padding-left:10px; margin-bottom:10px;">Milk Logs</h3>
             <div class="card" style="padding:0 20px;">
                 <div id="historyList"><p style="text-align:center; padding:20px; opacity:0.5;">Loading...</p></div>
             </div>
@@ -96,10 +134,10 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, query, where, onSnapshot, deleteDoc, doc, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, where, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        // YOUR KEYS PRE-FILLED:
+        // YOUR CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyBZsSTGkyS7zJxnckhCF17PYLs4mzDk1iY",
             authDomain: "milk-app-d3d4b.firebaseapp.com",
@@ -112,31 +150,21 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
-        const TABLE = "milk_logs_v3";
-
-        // ---------------------------------------------------------
-        // 🔒 CHANGE THIS TO YOUR EMAIL (The one who can edit)
-        // ---------------------------------------------------------
+        
+        const MILK_TABLE = "milk_logs_v3";
+        const PAY_TABLE = "payment_logs";
         const OWNER_EMAIL = "admin@milk.com"; 
 
         let isOwner = false; 
+        let currentBalance = 0; // Track balance for Pay Full button
 
-        // --- LOGIN & ROLE LOGIC ---
+        // AUTH
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Check if user is the Owner
                 isOwner = (user.email === OWNER_EMAIL);
+                document.getElementById('userBadge').innerText = isOwner ? "Owner Mode" : "Viewer Mode";
+                document.querySelectorAll('.owner-only').forEach(el => el.style.display = isOwner ? 'block' : 'none');
                 
-                // Update UI Text
-                const badge = document.getElementById('userBadge');
-                if(isOwner) {
-                    badge.innerText = "Owner Access (Edit Mode)";
-                    document.querySelectorAll('.owner-only').forEach(el => el.style.display = 'block');
-                } else {
-                    badge.innerText = "Milkman Access (View Only)";
-                    document.querySelectorAll('.owner-only').forEach(el => el.style.display = 'none');
-                }
-
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('app-view').style.display = 'block';
                 loadData();
@@ -149,29 +177,25 @@
         window.secureLogin = async () => {
             const email = document.getElementById('email').value;
             const pwd = document.getElementById('password').value;
-            const errBox = document.getElementById('loginError');
-            const btn = document.querySelector('#login-screen .btn-main');
-
-            btn.innerText = "CHECKING...";
             try {
                 await signInWithEmailAndPassword(auth, email, pwd);
-            } catch (error) {
-                console.error(error);
-                errBox.style.display = 'block';
-                errBox.innerText = "Error: Wrong email or password";
-                btn.innerText = "ENTER";
+            } catch (e) {
+                document.getElementById('loginError').style.display = 'block';
+                document.getElementById('loginError').innerText = "Error: Login Failed";
             }
         }
 
         window.logout = () => signOut(auth);
 
-        // --- APP LOGIC ---
+        // INIT
         window.addEventListener('load', () => {
-            document.getElementById('entryDate').valueAsDate = new Date();
+            const today = new Date();
+            document.getElementById('entryDate').valueAsDate = today;
+            document.getElementById('payDate').valueAsDate = today;
+            
             const sel = document.getElementById('monthSelector');
-            const now = new Date();
             for(let i=0; i<12; i++) {
-                const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
                 const opt = document.createElement('option');
                 opt.value = d.toISOString().slice(0, 7);
                 opt.text = d.toLocaleDateString('default', { month: 'long', year: 'numeric' });
@@ -185,68 +209,129 @@
             el.classList.add('active');
         }
 
-        let unsubscribe = null;
+        // DATA LOADING
+        let unsubMilk = null, unsubPay = null;
+
         window.loadData = () => {
             const selectedMonth = document.getElementById('monthSelector').value;
-            if(unsubscribe) unsubscribe();
+            let billAmount = 0;
+            let paidAmount = 0;
 
-            const q = query(collection(db, TABLE), where("month", "==", selectedMonth), orderBy("date", "desc"));
+            // 1. Load Payments
+            if(unsubPay) unsubPay();
+            unsubPay = onSnapshot(query(collection(db, PAY_TABLE), where("month", "==", selectedMonth)), (snap) => {
+                paidAmount = 0;
+                let payments = [];
+                snap.forEach(doc => {
+                    let d = doc.data(); d.id = doc.id;
+                    payments.push(d);
+                    paidAmount += parseFloat(d.amount);
+                });
+                payments.sort((a,b) => new Date(b.date) - new Date(a.date));
 
-            unsubscribe = onSnapshot(q, (snapshot) => {
+                let html = payments.length ? '' : '<div style="opacity:0.5; font-size:13px; text-align:center;">No payments yet</div>';
+                payments.forEach(p => {
+                    const del = isOwner ? `<div onclick="deletePayment('${p.id}')" style="color:#ef4444; cursor:pointer;">✕</div>` : '';
+                    html += `<div class="pay-row"><div><b>₹${p.amount}</b> <span style="font-size:12px; opacity:0.8;">on ${p.date}</span></div>${del}</div>`;
+                });
+                
+                document.getElementById('paymentList').innerHTML = html;
+                document.getElementById('totalPaid').innerText = "₹" + paidAmount;
+                updateBalance(billAmount, paidAmount);
+            });
+
+            // 2. Load Milk
+            if(unsubMilk) unsubMilk();
+            unsubMilk = onSnapshot(query(collection(db, MILK_TABLE), where("month", "==", selectedMonth)), (snap) => {
+                billAmount = 0;
+                let liters = 0;
+                let logs = [];
+
+                snap.forEach(doc => {
+                    let d = doc.data(); d.id = doc.id;
+                    logs.push(d);
+                    billAmount += (d.qty * d.rate);
+                    liters += parseFloat(d.qty);
+                });
+                logs.sort((a,b) => new Date(b.date) - new Date(a.date));
+
                 let html = "";
-                let totalCost = 0;
-                let totalLiters = 0;
-
-                snapshot.forEach((doc) => {
-                    const d = doc.data();
-                    const cost = d.qty * d.rate;
-                    totalCost += cost;
-                    totalLiters += parseFloat(d.qty);
-                    const dayStr = new Date(d.date).toLocaleDateString('default', { day: 'numeric', weekday: 'short' });
-
-                    // Only show delete button if OWNER
-                    let deleteBtn = isOwner ? `<button class="btn-del" onclick="deleteItem('${doc.id}')">✕</button>` : '';
-
-                    html += `
-                        <div class="entry-row">
-                            <div><div style="font-weight:600;">${dayStr}</div><div style="font-size:12px; opacity:0.6;">${d.qty}L @ ₹${d.rate}</div></div>
-                            <div style="display:flex; gap:15px; align-items:center;">
-                                <div style="font-weight:bold; color:#38bdf8;">₹${cost}</div>
-                                ${deleteBtn}
-                            </div>
-                        </div>`;
+                logs.forEach(d => {
+                    const day = new Date(d.date).toLocaleDateString('default', { day: 'numeric', weekday: 'short' });
+                    const del = isOwner ? `<button class="btn-del" onclick="deleteMilk('${d.id}')">✕</button>` : '';
+                    html += `<div class="entry-row"><div><b>${day}</b><br><small>${d.qty}L @ ₹${d.rate}</small></div><div style="display:flex; gap:10px; align-items:center;"><b>₹${d.qty*d.rate}</b>${del}</div></div>`;
                 });
 
-                document.getElementById('historyList').innerHTML = html || '<p style="text-align:center; opacity:0.4; padding:20px;">No milk records found.</p>';
-                document.getElementById('totalCost').innerText = '₹' + Math.round(totalCost);
-                document.getElementById('totalLiters').innerText = totalLiters.toFixed(1) + ' L';
-                const avg = totalLiters > 0 ? (totalCost / totalLiters).toFixed(1) : 0;
-                document.getElementById('avgRate').innerText = '₹' + avg;
+                document.getElementById('historyList').innerHTML = html || '<p style="text-align:center; opacity:0.5;">No records</p>';
+                document.getElementById('totalBill').innerText = '₹' + Math.round(billAmount);
+                document.getElementById('totalLiters').innerText = liters.toFixed(1) + ' L';
+                document.getElementById('avgRate').innerText = '₹' + (liters > 0 ? (billAmount / liters).toFixed(1) : 0);
+
+                updateBalance(billAmount, paidAmount);
             });
         }
 
-        window.saveEntry = async () => {
-            if(!isOwner) return alert("Milkman cannot add entries!");
-            
-            const date = document.getElementById('entryDate').value;
-            const qty = parseFloat(document.getElementById('entryQty').value);
-            const rate = parseFloat(document.getElementById('entryRate').value);
-            const btn = document.getElementById('saveBtn');
+        function updateBalance(bill, paid) {
+            currentBalance = Math.round(bill - paid);
+            const el = document.getElementById('balanceDisplay');
+            const btn = document.getElementById('payFullBtn');
 
+            if(currentBalance <= 0 && bill > 0) {
+                el.innerText = "PAID ✅";
+                el.style.color = "var(--success)";
+                btn.style.display = "none"; // Hide button if paid
+            } else {
+                el.innerText = "₹" + currentBalance;
+                el.style.color = "var(--glow)";
+                // Show Pay Full button if there is a balance (and isOwner)
+                if(isOwner && currentBalance > 0) {
+                    btn.style.display = "block";
+                    document.getElementById('payFullAmt').innerText = currentBalance;
+                } else {
+                    btn.style.display = "none";
+                }
+            }
+        }
+
+        // ACTIONS
+        window.saveEntry = async () => {
+            const date = document.getElementById('entryDate').value;
+            const qty = document.getElementById('entryQty').value;
+            const rate = document.getElementById('entryRate').value;
             if(!date || !qty) return alert("Check inputs");
-            btn.innerText = "Saving...";
             
             try {
-                await addDoc(collection(db, TABLE), { date, month: date.slice(0, 7), qty, rate, created: new Date() });
+                await addDoc(collection(db, MILK_TABLE), { date, month: date.slice(0,7), qty: parseFloat(qty), rate: parseFloat(rate), created: new Date() });
                 window.setQty(0.5, document.querySelector('.chip:first-child'));
-            } catch(e) { alert("Error: " + e.message); }
-            btn.innerText = "SAVE";
+            } catch(e) { alert(e.message); }
         }
 
-        window.deleteItem = async (id) => { 
-            if(!isOwner) return;
-            if(confirm("Delete this?")) await deleteDoc(doc(db, TABLE, id)); 
+        window.addPayment = async () => {
+            const date = document.getElementById('payDate').value;
+            const amount = parseFloat(document.getElementById('payAmount').value);
+            if(!date || !amount) return alert("Check inputs");
+            if(confirm(`Add payment of ₹${amount}?`)) {
+                await addDoc(collection(db, PAY_TABLE), { date, month: date.slice(0,7), amount, created: new Date() });
+                document.getElementById('payAmount').value = "";
+            }
         }
+
+        // NEW: PAY FULL FUNCTION
+        window.payFull = async () => {
+            if(currentBalance <= 0) return;
+            if(confirm(`Pay remaining balance of ₹${currentBalance}?`)) {
+                const date = new Date().toISOString().slice(0, 10);
+                await addDoc(collection(db, PAY_TABLE), { 
+                    date: date, 
+                    month: date.slice(0,7), 
+                    amount: currentBalance, 
+                    created: new Date() 
+                });
+            }
+        }
+
+        window.deleteMilk = async (id) => { if(confirm("Delete?")) await deleteDoc(doc(db, MILK_TABLE, id)); }
+        window.deletePayment = async (id) => { if(confirm("Delete?")) await deleteDoc(doc(db, PAY_TABLE, id)); }
     </script>
 </body>
 </html>
